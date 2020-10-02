@@ -1,19 +1,10 @@
 package net.boomerangplatform.mongo.model;
 
-public class Scheduler {
+public class TriggerScheduler extends Trigger {
 
-  private Boolean enable;
   private String schedule;
   private String timezone;
   private Boolean advancedCron;
-
-  public Boolean getEnable() {
-    return enable;
-  }
-
-  public void setEnable(Boolean enable) {
-    this.enable = enable;
-  }
 
   public String getSchedule() {
     return schedule;

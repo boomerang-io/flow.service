@@ -43,7 +43,7 @@ import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.Scheduler;
+import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.TaskConfigurationNode;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.Webhook;
@@ -232,7 +232,7 @@ public class WorkflowControllerTests extends FlowTests {
     event.setEnable(false);
     event.setTopic("topic");
 
-    Scheduler scheduler = new Scheduler();
+    TriggerScheduler scheduler = new TriggerScheduler();
     scheduler.setEnable(true);
     scheduler.setSchedule("0 00 20 ? * TUE,WED,THU *");
     scheduler.setTimezone("timezone");

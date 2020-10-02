@@ -31,7 +31,7 @@ import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.entity.WorkflowEntity;
 import net.boomerangplatform.mongo.model.Event;
 import net.boomerangplatform.mongo.model.FlowProperty;
-import net.boomerangplatform.mongo.model.Scheduler;
+import net.boomerangplatform.mongo.model.TriggerScheduler;
 import net.boomerangplatform.mongo.model.TaskType;
 import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.model.Webhook;
@@ -80,7 +80,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (entity.getTriggers() != null) {
       Triggers trigger = entity.getTriggers();
       if (trigger != null) {
-        Scheduler scheduler = trigger.getScheduler();
+        TriggerScheduler scheduler = trigger.getScheduler();
         if (scheduler != null && scheduler.getEnable()) {
           try {
             this.taskScheduler.cancelJob(entity.getId());
@@ -134,7 +134,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (summary.getTriggers() != null) {
       Triggers trigger = summary.getTriggers();
 
-      Scheduler scheduler = trigger.getScheduler();
+      TriggerScheduler scheduler = trigger.getScheduler();
       if (scheduler != null && scheduler.getEnable()) {
         logger.info("Scheduling workflow: {}", scheduler.getSchedule());
         this.taskScheduler.scheduleWorkflow(entity);
@@ -206,7 +206,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       Webhook webhook = trigger.getWebhook();
       updateWebhook(entity, currentToken, webhook);
 
-      Scheduler scheduler = trigger.getScheduler();
+      TriggerScheduler scheduler = trigger.getScheduler();
       updateSchedule(entity, previousTriggers, currentTimezone, previous, scheduler);
 
     }
@@ -249,7 +249,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void updateSchedule(final WorkflowEntity entity, Triggers previousTriggers,
-      String currentTimezone, boolean previous, Scheduler scheduler) {
+      String currentTimezone, boolean previous, TriggerScheduler scheduler) {
     if (scheduler != null) {
 
       String timezone = scheduler.getTimezone();

@@ -2,32 +2,47 @@ package net.boomerangplatform.mongo.model;
 
 public class Triggers {
 
-  private Scheduler scheduler;
-  private Webhook webhook;
-  private Event event;
-
-  public Scheduler getScheduler() {
+  private Trigger manual;
+  private TriggerScheduler scheduler;
+  private TriggerEvent webhook;
+  private TriggerEvent dockerhub;
+  private TriggerEvent slack;
+  private TriggerEvent custom;
+  
+  public Trigger getManual() {
+    return manual;
+  }
+  public void setManual(Trigger manual) {
+    this.manual = manual;
+  }
+  public TriggerScheduler getScheduler() {
     return scheduler;
   }
-
-  public void setScheduler(Scheduler scheduler) {
+  public void setScheduler(TriggerScheduler scheduler) {
     this.scheduler = scheduler;
   }
-
-  public Webhook getWebhook() {
+  public TriggerEvent getWebhook() {
     return webhook;
   }
-
-  public void setWebhook(Webhook webhook) {
+  public void setWebhook(TriggerEvent webhook) {
     this.webhook = webhook;
   }
-
-  public Event getEvent() {
-    return event;
+  public TriggerEvent getDockerhub() {
+    return dockerhub;
   }
-
-  public void setEvent(Event event) {
-    this.event = event;
+  public void setDockerhub(TriggerEvent dockerhub) {
+    this.dockerhub = dockerhub;
   }
-
+  public TriggerEvent getSlack() {
+    return slack;
+  }
+  public void setSlack(TriggerEvent slack) {
+    this.slack = slack;
+  }
+  public TriggerEvent getCustom() {
+    return custom;
+  }
+  public void setCustom(TriggerEvent custom) {
+    this.custom = custom;
+  }
 }

@@ -26,6 +26,7 @@ import io.nats.streaming.StreamingConnectionFactory;
 import io.nats.streaming.Subscription;
 import io.nats.streaming.SubscriptionOptions;
 import net.boomerangplatform.mongo.model.FlowProperty;
+import net.boomerangplatform.mongo.model.Triggers;
 import net.boomerangplatform.mongo.service.FlowWorkflowService;
 
 @Component
@@ -67,7 +68,8 @@ public class NatsClientImpl implements NatsClient {
 //	  TODO determine the trigger implementation
 	  String workflowId = event.getAttributes().getSubject().orElse("");
 	  String trigger = event.getAttributes().getType().replace(TYPE_PREFIX, "");
-	  if (trigger.equals(workflowService.getWorkflow(workflowId).getTriggers().getEvent().getTopic())) {
+	  
+	  if (isTriggerEnabled(trigger, workflowId)) {
 	    logger.info("Process Message - Trigger(" + trigger + ") is allowed.");
 	    
 	    ReadContext ctx = JsonPath.parse(payload);
@@ -111,5 +113,30 @@ public class NatsClientImpl implements NatsClient {
         }
 //        TODO do we close connection and subscription?
 	}
+	
+    private Boolean isTriggerEnabled(String trigger, String workflowId) {
+
+      Triggers triggers = workflowService.getWorkflow(workflowId).getTriggers();
+
+      switch (trigger) {
+        case "manual":
+          return triggers.getManual().getEnable();
+        case "scheduler":
+          return triggers.getScheduler().getEnable();
+        case "webhook":
+          return triggers.getWebhook().getEnable();
+        case "dockerhub":
+          return triggers.getDockerhub().getEnable();
+        case "slack":
+          return triggers.getSlack().getEnable();
+        default:
+          if(triggers.getCustom().getEnable()) {
+            return trigger
+                .equals(workflowService.getWorkflow(workflowId).getTriggers().getCustom().getTopic());
+          };
+      }
+
+      return false;
+    }
 
 }

@@ -1,16 +1,16 @@
 package net.boomerangplatform.mongo.model;
 
-public class Event {
+public class TriggerEvent extends Trigger {
 
-  private Boolean enable;
+  private String token;
   private String topic;
 
-  public Boolean getEnable() {
-    return enable;
+  public String getToken() {
+    return token;
   }
 
-  public void setEnable(Boolean enable) {
-    this.enable = enable;
+  public void setToken(String token) {
+    this.token = token;
   }
 
   public String getTopic() {
@@ -20,5 +20,4 @@ public class Event {
   public void setTopic(String topic) {
     this.topic = topic;
   }
-
 }
