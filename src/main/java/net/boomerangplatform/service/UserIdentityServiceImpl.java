@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import net.boomerangplatform.client.BoomerangUserService;
 import net.boomerangplatform.client.model.UserProfile;
-import net.boomerangplatform.model.FlowMode;
 import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.OneTimeCode;
 import net.boomerangplatform.model.UserQueryResult;
@@ -27,8 +26,8 @@ import net.boomerangplatform.security.service.UserDetailsService;
 @Service
 public class UserIdentityServiceImpl implements UserIdentityService {
 
-  @Value("${flow.mode}")
-  private String flowMode;
+  @Value("${flow.externalUrl.user}")
+  private String flowExternalUrlUser;
 
   @Autowired
   private UserDetailsService usertDetailsService;
@@ -38,17 +37,17 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Autowired
   private FlowUserService flowUserService;
-  
+
   @Value("${boomerang.otc}")
   private String corePlatformOTC;
 
   @Override
   public FlowUserEntity getCurrentUser() {
-    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
+    if (flowExternalUrlUser.isBlank()) {
       UserDetails user = usertDetailsService.getUserDetails();
       String email = user.getEmail();
       return flowUserService.getUserWithEmail(email);
-      
+
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
@@ -58,7 +57,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     }
   }
 
-  
+
   private FlowUserEntity getOrRegisterUser(UserType userType) {
     UserDetails userDetails = usertDetailsService.getUserDetails();
     String email = userDetails.getEmail();
@@ -71,7 +70,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getUserByID(String userId) {
-    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
+    if (flowExternalUrlUser.isBlank()) {
       Optional<FlowUserEntity> flowUser = flowUserService.getUserById(userId);
       if (flowUser.isPresent()) {
         return flowUser.get();
@@ -136,7 +135,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc) {
-    
+
     if (corePlatformOTC.equals(otc.getOtc())) {
       getOrRegisterUser(UserType.admin);
       return new ResponseEntity<>(HttpStatus.OK);
@@ -146,13 +145,13 @@ public class UserIdentityServiceImpl implements UserIdentityService {
 
   @Override
   public FlowUserEntity getOrRegisterCurrentUser() {
-    
-    if (FlowMode.STANDALONE.getMode().equals(flowMode)) {
-      
+
+    if (flowExternalUrlUser.isBlank()) {
+
       if (flowUserService.getUserCount() == 0) {
         throw new HttpClientErrorException(HttpStatus.LOCKED);
       }
-      
+
       return getOrRegisterUser(UserType.user);
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();

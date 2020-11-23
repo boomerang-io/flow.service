@@ -9,10 +9,7 @@ import java.util.TimeZone;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -21,12 +18,11 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import com.mongodb.client.MongoDatabase;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.misc.FlowTests;
@@ -37,11 +33,10 @@ import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.model.Quotas;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 import net.boomerangplatform.tests.MongoConfig;
-
-//@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringJUnit4ClassRunner.class)
 // try classpath attribute
 // try locations and *include the entity classes
-@RunWith(MockitoJUnitRunner.class)
+//@RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})//, MongoConfiguration.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles(profiles={"local"})//, resolver = ActiveProfilesResolver1.class, inheritProfiles=false)

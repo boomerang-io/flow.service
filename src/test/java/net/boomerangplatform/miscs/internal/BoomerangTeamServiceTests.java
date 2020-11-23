@@ -27,6 +27,7 @@ import net.boomerangplatform.client.model.Team;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.tests.MongoConfig;
 
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
