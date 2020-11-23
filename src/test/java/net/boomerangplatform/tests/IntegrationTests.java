@@ -213,10 +213,8 @@ public abstract class IntegrationTests extends AbstractFlowTests {
     }
   }
 
-  @Override
   @Before
-  public void setUp() throws IOException {
-    super.setUp();
+  public void localSetUp() throws IOException {
     mockServer = MockRestServiceServer.bindTo(this.restTemplate).ignoreExpectOrder(true).build();
     mockServer.expect(times(1), requestTo(containsString("http://localhost:8084/launchpad/users")))
         .andExpect(method(HttpMethod.GET)).andRespond(

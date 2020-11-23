@@ -25,9 +25,10 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.config.io.ProcessOutput;
 import de.flapdoodle.embed.process.config.store.HttpProxyFactory;
 import de.flapdoodle.embed.process.config.store.IDownloadConfig;
+import net.boomerangplatform.mongo.service.MongoConfiguration;
 
 @Configurable
-public class MongoConfig implements InitializingBean, DisposableBean {
+public class MongoConfig implements InitializingBean, DisposableBean  {
 
   private static final String MONGO_IP = "localhost";
 
@@ -87,6 +88,11 @@ public class MongoConfig implements InitializingBean, DisposableBean {
     MongoTemplate template = new MongoTemplate(mongoDbFactory);
     template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
     return template;
+  }
+  
+  @Bean
+  public MongoConfiguration mongoConfiguration() {
+      return new MongoConfiguration();
   }
 
   @Override

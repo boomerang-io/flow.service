@@ -1,9 +1,11 @@
 package net.boomerangplatform.mongo.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-@Component
+@Configuration
 public class MongoConfiguration {
 
   @Value("${workflow.mongo.collection.prefix}")

@@ -8,8 +8,13 @@ import java.util.logging.Logger;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
+import org.mockito.Answers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -18,6 +23,17 @@ public abstract class AbstractFlowTests {
 
   private static final Logger LOGGER = Logger.getLogger(BoomerangTestConfiguration.class.getName());
 
+
+  @Mock
+  MongoTemplate mockMongoTemplate;
+  @Mock
+  protected MongoDatabase mockDb;
+//  @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+  MockRestServiceServer mockRestServiceServer;
+  @Autowired
+  protected RestTemplate mockRestTemplate;
+  
+  
   @Autowired
   private MongoTemplate mongoTemplate;
 
@@ -25,8 +41,13 @@ public abstract class AbstractFlowTests {
 
   protected abstract String[] getCollections();
 
+  //TODO: REMOVE AND MOVE TO APPROVEEXECUTETESTS
   @Before
   public void setUp() throws IOException {
+    Mockito.when(mockMongoTemplate.getDb()).thenReturn(mockDb);
+    Mockito.when(MockRestServiceServer.bindTo(mockRestTemplate).
+        ignoreExpectOrder(true).build()).thenReturn(mockRestServiceServer);
+
     init();
     clearAllCollections();
     setupDB();
@@ -90,9 +111,9 @@ public abstract class AbstractFlowTests {
   }
 
   protected void clearDB() {
-    MongoDatabase db = mongoTemplate.getDb();
+    mockDb = mongoTemplate.getDb();
     for (String collection : getCollections()) {
-      db.getCollection(collection).drop();
+      mockDb.getCollection(collection).drop();
     }
   }
 

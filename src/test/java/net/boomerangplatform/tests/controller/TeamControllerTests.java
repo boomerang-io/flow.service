@@ -1,20 +1,32 @@
 package net.boomerangplatform.tests.controller;
 
 import static org.junit.Assert.assertEquals;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import com.mongodb.client.MongoDatabase;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.misc.FlowTests;
@@ -23,22 +35,36 @@ import net.boomerangplatform.model.WorkflowQuotas;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.model.Quotas;
+import net.boomerangplatform.mongo.service.MongoConfiguration;
 import net.boomerangplatform.tests.MongoConfig;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})
+//@RunWith(SpringJUnit4ClassRunner.class)
+// try classpath attribute
+// try locations and *include the entity classes
+@RunWith(MockitoJUnitRunner.class)
+@ContextConfiguration(classes = {Application.class, MongoConfig.class})//, MongoConfiguration.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("local")
+@ActiveProfiles(profiles={"local"})//, resolver = ActiveProfilesResolver1.class, inheritProfiles=false)
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
-public class TeamControllerTests extends FlowTests {
-
-  @Autowired
+public class TeamControllerTests extends FlowTests implements BeanFactoryPostProcessor {
+//  
+//  @Mock
+//  MongoDatabase mockDb;
+//  
+  @Mock
   private TeamController controller;
-
+  
+  
+  @Override
+  @Before
+  public void setUp() throws IOException {
+   super.setUp();
+  }
+  
   @Test
   public void testGetTeams() {
-    assertEquals(3, controller.getTeams().size());
+   assertEquals(3, controller.getTeams().size());
 
     assertEquals(Integer.valueOf(15),
         controller.getTeams().get(0).getQuotas().getMaxWorkflowCount());
@@ -276,5 +302,24 @@ public class TeamControllerTests extends FlowTests {
     nextMonth.set(Calendar.SECOND, 0);
     nextMonth.set(Calendar.MILLISECOND, 0);
     return nextMonth.getTime();
+  }
+
+  @Override
+  public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory)
+      throws BeansException {
+
+    GenericBeanDefinition bd = new GenericBeanDefinition();
+    bd.setBeanClass(MongoConfiguration.class);
+    bd.getPropertyValues().add("strProp", "my string property");
+
+    ((DefaultListableBeanFactory) beanFactory)
+              .registerBeanDefinition("mongoConfiguration", bd);
+  }
+  
+  @org.springframework.context.annotation.Bean
+  public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+      PropertyPlaceholderConfigurer ppc = new PropertyPlaceholderConfigurer();
+      ppc.setIgnoreResourceNotFound(true);
+      return ppc;
   }
 }

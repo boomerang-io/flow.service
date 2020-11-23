@@ -10,21 +10,95 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.bson.Document;
 import org.junit.Before;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import net.boomerangplatform.tests.AbstractFlowTests;
+import net.boomerangplatform.tests.BoomerangTestConfiguration;
 
 
 public class FlowTests extends AbstractFlowTests {
+  private static final Logger LOGGER = Logger.getLogger(BoomerangTestConfiguration.class.getName());
 
+  @Mock
+  MongoDatabase mockMongoDb;
   protected MockRestServiceServer mockServer;
+  @Mock
+  MongoTemplate mockMongoTemplate;
+  MongoDatabase db;
 
-  @Autowired
+  @Override
+  @Before
+  public void setUp() throws IOException {
+      Mockito.when(mockMongoTemplate.getDb()).thenReturn(db);
+//      Mockito.when(db.getCollection)
+      init();
+      clearAllCollections();
+      setupDB();
+      localSetUp();
+  }
+
+  private void init() {
+    db = mockMongoTemplate.getDb();
+
+    for (String collection : getCollections()) {
+      if (db.getCollection(collection) == null) {
+        db.createCollection(collection);
+      }
+    }
+  }
+  private void setupDB() {
+    
+    getData().entrySet().stream()
+        .forEach(collection -> insertDataForEntity(collection.getKey(), collection.getValue()));
+  }
+  
+  private void clearAllCollections() {
+    for (String name : getCollections()) {
+      clearColection(name);
+    }
+  }
+  
+  private void insertDataForEntity(String entity, List<String> values) {
+    values.forEach(filePath -> {
+      try {
+        insertDataIntoCollection(entity, filePath);
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Error insert data!", e);
+      }
+    });
+  }
+
+  private void insertDataIntoCollection(String collectionName, String filePath) throws IOException {
+    MongoDatabase db = mockMongoTemplate.getDb();
+
+    final MongoCollection<Document> collection = db.getCollection(collectionName);
+    final Document doc = Document.parse(getMockFile(filePath));
+    collection.insertOne(doc);
+  }
+  
+  @Override
+  protected void clearColection(String collectionName) {
+    MongoDatabase db = mockMongoTemplate.getDb();
+    final MongoCollection<Document> collection = db.getCollection(collectionName);
+    collection.deleteMany(new Document());
+  }
+
+//  @Autowired
+  @Mock
   @Qualifier("internalRestTemplate")
   protected RestTemplate restTemplate;
 
@@ -90,10 +164,9 @@ public class FlowTests extends AbstractFlowTests {
     return data;
   }
 
-  @Override
   @Before
-  public void setUp() throws IOException {
-    super.setUp();
+  public void localSetUp() throws IOException {
+    
 
     mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
 
