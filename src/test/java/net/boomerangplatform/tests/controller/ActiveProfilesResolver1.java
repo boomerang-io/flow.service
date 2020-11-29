@@ -1,5 +1,6 @@
 package net.boomerangplatform.tests.controller;
 
+import static org.springframework.test.util.MetaAnnotationUtils.findAnnotationDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,11 +8,13 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.expression.AccessException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
@@ -21,32 +24,86 @@ import org.springframework.test.context.support.DefaultActiveProfilesResolver;
 import org.springframework.test.util.MetaAnnotationUtils;
 import org.springframework.test.util.MetaAnnotationUtils.AnnotationDescriptor;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 
 public class ActiveProfilesResolver1 implements ActiveProfilesResolver {
   private static final Log logger = LogFactory.getLog(ActiveProfilesResolver1.class);
-  private static String resolvedMongoClass = "";
+  private static Collection<String> listContainingResolvedMongoClass = new ArrayList<String>();
   private Class<?> testClazz = null;
-  Collection<String> primaryInheritedProfiles = null;
-  
-  public ActiveProfilesResolver1() {
-  }
-  
+  private Document mongoConfiguration;
+  Collection<String> primaryInheritedProfiles = new ArrayList<String>();
+
+  public ActiveProfilesResolver1() {}
+
   public static int HIT_COUNT = 0;
+  private static Collection<String> profileCollection = null;
 
   @SuppressWarnings("unchecked")
   @Override
   public String[] resolve(Class<?> testClass) {
     testClazz = testClass;
+    // throw new RuntimeException("testClazz = testClass = " + testClazz);
+    Collection<String> allProfiles = null;
     if (HIT_COUNT == 0) {
       HIT_COUNT++;
-      primaryInheritedProfiles = ActiveProfilesResolver1.resolveActiveProfiles(testClass);
-      resolvedMongoClass = resolveMongoClass(testClass);
-      primaryInheritedProfiles.add(resolvedMongoClass);
+      primaryInheritedProfiles = ActiveProfilesResolver1.resolveActiveProfiles(testClazz);
+      if (logger.isInfoEnabled()) {
+        logger.info("primaryInheritedProfiles(size) = " + primaryInheritedProfiles.size());
+      }
     }
-    return new String[] {resolveMongoClass(testClass)};
+    // TODO: RE-ADD if needed resolvedMongoClass = resolveMongoClass(testClazz);
+    listContainingResolvedMongoClass =
+        ActiveProfilesResolver1.resolveActiveProfiles(MongoConfiguration.class);
+    primaryInheritedProfiles.addAll(listContainingResolvedMongoClass);
+    allProfiles = primaryInheritedProfiles;
+    return ArrayUtils.toStringArray(allProfiles.toArray());// new String[]
+                                                           // CollectionUtils//primaryInheritedProfiles;
+  }
+
+  /**
+   * Resolve the <em>bean definition profiles</em> for the given {@linkplain Class test class} based
+   * on profiles configured declaratively via {@link ActiveProfiles#profiles} or
+   * {@link ActiveProfiles#value}.
+   * 
+   * @param testClass the test class for which the profiles should be resolved; never {@code null}
+   * @return the list of bean definition profiles to use when loading the
+   *         {@code ApplicationContext}; never {@code null}
+   */
+  public String[] resolves(Class<?> testClass) {
+    Assert.notNull(testClass, "Class must not be null");
+
+    final Set<String> activeProfiles = new LinkedHashSet<>();
+
+    Class<ActiveProfiles> annotationType = ActiveProfiles.class;
+    AnnotationDescriptor<ActiveProfiles> descriptor =
+        findAnnotationDescriptor(testClass, annotationType);
+
+    if (descriptor == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format(
+            "Could not find an 'annotation declaring class' for annotation type [%s] and class [%s]",
+            annotationType.getName(), testClass.getName()));
+      }
+    } else {
+      Class<?> declaringClass = descriptor.getDeclaringClass();
+      ActiveProfiles annotation = descriptor.synthesizeAnnotation();
+
+      if (logger.isTraceEnabled()) {
+        logger.trace(String.format("Retrieved @ActiveProfiles [%s] for declaring class [%s].",
+            annotation, declaringClass.getName()));
+      }
+
+      for (String profile : annotation.profiles()) {
+        if (StringUtils.hasText(profile)) {
+          activeProfiles.add(profile.trim());
+        }
+      }
+    }
+
+    return StringUtils.toStringArray(activeProfiles);
   }
 
   public String resolveMongoClass(Class<?> testClass) {
@@ -103,6 +160,50 @@ public class ActiveProfilesResolver1 implements ActiveProfilesResolver {
 
   }
 
+
+  /**
+   * Resolve the <em>bean definition profiles</em> for the given {@linkplain Class test class} based
+   * on profiles configured declaratively via {@link ActiveProfiles#profiles} or
+   * {@link ActiveProfiles#value}.
+   * 
+   * @param testClass the test class for which the profiles should be resolved; never {@code null}
+   * @return the list of bean definition profiles to use when loading the
+   *         {@code ApplicationContext}; never {@code null}
+   */
+  public String[] resolveToProfile(Class<?> testClass) {
+    Assert.notNull(testClass, "Class must not be null");
+
+    final Set<String> activeProfiles = new LinkedHashSet<>();
+
+    Class<ActiveProfiles> annotationType = ActiveProfiles.class;
+    AnnotationDescriptor<ActiveProfiles> descriptor =
+        findAnnotationDescriptor(testClass, annotationType);
+
+    if (descriptor == null) {
+      if (logger.isDebugEnabled()) {
+        logger.debug(String.format(
+            "Could not find an 'annotation declaring class' for annotation type [%s] and class [%s]",
+            annotationType.getName(), testClass.getName()));
+      }
+    } else {
+      Class<?> declaringClass = descriptor.getDeclaringClass();
+      ActiveProfiles annotation = descriptor.synthesizeAnnotation();
+
+      if (logger.isTraceEnabled()) {
+        logger.trace(String.format("Retrieved @ActiveProfiles [%s] for declaring class [%s].",
+            annotation, declaringClass.getName()));
+      }
+
+      for (String profile : annotation.profiles()) {
+        if (StringUtils.hasText(profile)) {
+          activeProfiles.add(profile.trim());
+        }
+      }
+    }
+
+    return StringUtils.toStringArray(activeProfiles);
+  }
+
   /**
    * Resolve <em>active bean definition profiles</em> for the supplied {@link Class}.
    * <p>
@@ -131,61 +232,82 @@ public class ActiveProfilesResolver1 implements ActiveProfilesResolver {
           "Could not find an 'annotation declaring class' for annotation type [%s] and class [%s]",
           annotationType.getName(), testClass.getName()));
     }
-
+    Set<String> activeProfiles = null;
     while (descriptor != null) {
-      Class<?> rootDeclaringClass = descriptor.getRootDeclaringClass();
-      Class<?> declaringClass = descriptor.getDeclaringClass();
-      ActiveProfiles annotation = descriptor.synthesizeAnnotation();
+          Class<?> rootDeclaringClass = descriptor.getRootDeclaringClass();
+          Class<?> declaringClass = descriptor.getDeclaringClass();
+          ActiveProfiles annotation = descriptor.synthesizeAnnotation();
 
-      if (logger.isTraceEnabled()) {
-        logger.trace(String.format("Retrieved @ActiveProfiles [%s] for declaring class [%s]",
-            annotation, declaringClass.getName()));
-      }
-
-      Class<? extends ActiveProfilesResolver> resolverClass = annotation.resolver();
-      if (ActiveProfilesResolver.class == resolverClass) {
-        resolverClass = DefaultActiveProfilesResolver.class;
-      }
-
-      ActiveProfilesResolver resolver;
-      try {
-        resolver = BeanUtils.instantiateClass(resolverClass, ActiveProfilesResolver.class);
-      } catch (Exception ex) {
-        String msg = String.format(
-            "Could not instantiate ActiveProfilesResolver of type [%s] " + "for test class [%s]",
-            resolverClass.getName(), rootDeclaringClass.getName());
-        logger.error(msg);
-        throw new IllegalStateException(msg, ex);
-      }
-
-      String[] profiles = resolver.resolve(rootDeclaringClass);
-      if (!ObjectUtils.isEmpty(profiles)) {
-        profileArrays.add(profiles);
-      }
-
-      /*******
-       * 
-       * ********/
-      profileArrays.add(new String[] {resolvedMongoClass});
-
-      descriptor = (annotation.inheritProfiles()
-          ? MetaAnnotationUtils.findAnnotationDescriptor(rootDeclaringClass.getSuperclass(),
-              annotationType)
-          : null);
-    }
-
-    // Reverse the list so that we can traverse "down" the hierarchy.
-    Collections.reverse(profileArrays);
-
-    final Set<String> activeProfiles = new LinkedHashSet<>();
-    for (String[] profiles : profileArrays) {
-      for (String profile : profiles) {
-        if (StringUtils.hasText(profile)) {
-          activeProfiles.add(profile.trim());
+          if (logger.isTraceEnabled()) {
+            logger.trace(String.format("Retrieved @ActiveProfiles [%s] for declaring class [%s]",
+                annotation, declaringClass.getName()));
+          }
+    
+          Class<? extends ActiveProfilesResolver> resolverClass = annotation.resolver();
+          if (ActiveProfilesResolver.class == resolverClass) {
+            resolverClass = DefaultActiveProfilesResolver.class;
+          }
+    
+          ActiveProfilesResolver resolver;
+          try {
+            resolver = BeanUtils.instantiateClass(resolverClass, ActiveProfilesResolver1.class);
+          } catch (Exception ex) {
+            String msg = String.format(
+                "Could not instantiate ActiveProfilesResolver of type [%s] " + "for test class [%s]",
+                resolverClass.getName(), rootDeclaringClass.getName());
+            logger.error(msg);
+            throw new IllegalStateException(msg, ex);
+          }
+    
+          String[] profiles = ((ActiveProfilesResolver1) resolver).resolves(rootDeclaringClass);
+          if (!ObjectUtils.isEmpty(profiles)) {
+            profileArrays.add(profiles);
+          }
+    
+          // throw new RuntimeException("listContainingResolvedMongoClass =" +
+          // listContainingResolvedMongoClass);
+          /*******
+           * 
+           * ********/
+          Object objs[] = listContainingResolvedMongoClass.toArray();
+          String s = "";
+          String addUs[] = new String[1];
+          int i = 0;
+          for (Object o : objs) {
+            if (o instanceof String) {
+              s = (String) o;
+              addUs[i++] = s;
+            }
+            profileArrays.add(addUs);
+    
+            descriptor = (annotation.inheritProfiles()
+                ? MetaAnnotationUtils.findAnnotationDescriptor(rootDeclaringClass.getSuperclass(),
+                    annotationType)
+                : null);
+          }
+    
+          // Reverse the list so that we can traverse "down" the hierarchy.
+          Collections.reverse(profileArrays);
+    
+//          activeProfiles = new LinkedHashSet<>();
+          for (String[] theProfiles : profileArrays) {
+            for (String profile : theProfiles) {
+              if (StringUtils.hasText(profile) && !profile.contains("null")) {
+                activeProfiles.add(profile.trim());
+              } else {
+                continue;
+              }
+            }
+          }
         }
-      }
-    }
 
-    return activeProfiles;
+    ArrayList<String> suppliedArray = new ArrayList<String>(); //activeProfiles.size()];
+    String[] supply = activeProfiles.toArray(suppliedArray.toArray(new String[1]));
+    
+    for (String str : supply) {
+      profileCollection.add(str);
+    }
+    CollectionUtils.mergeArrayIntoCollection(supply, profileCollection);
+    return profileCollection;
   }
 }

@@ -39,7 +39,7 @@ import net.boomerangplatform.tests.MongoConfig;
 //@RunWith(MockitoJUnitRunner.class)
 @ContextConfiguration(classes = {Application.class, MongoConfig.class})//, MongoConfiguration.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@ActiveProfiles(profiles={"local"})//, resolver = ActiveProfilesResolver1.class, inheritProfiles=false)
+@ActiveProfiles(profiles={"local"}, resolver = ActiveProfilesResolver1.class)//, inheritProfiles=false)
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class TeamControllerTests extends FlowTests implements BeanFactoryPostProcessor {
@@ -49,7 +49,6 @@ public class TeamControllerTests extends FlowTests implements BeanFactoryPostPro
 //  
   @Mock
   private TeamController controller;
-  
   
   @Override
   @Before

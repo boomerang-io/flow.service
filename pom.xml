@@ -309,6 +309,7 @@
 				<directory>src/main/resources</directory>
 				<filtering>true</filtering>
 				<includes>
+					<include>org.junit.internal.runners.ErrorReportingRunner</include>
 					<include>**/*.properties</include>
 				</includes>
 			</resource>
