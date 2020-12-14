@@ -5,7 +5,7 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-@Configuration
+@Component
 public class MongoConfiguration {
 
   @Value("${workflow.mongo.collection.prefix}")

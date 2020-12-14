@@ -2,6 +2,7 @@ package net.boomerangplatform.mongo.entity;
 
 import java.util.Date;
 import java.util.List;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,8 +11,24 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import net.boomerangplatform.mongo.model.CoreProperty;
 import net.boomerangplatform.mongo.model.TaskStatus;
 
+@Configuration
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+/**
+ * 1
+
+The only comment I can add is that you have to add @ prefix to the bean name:
+
+collection = "#{@beanName.method()}"
+for the bean factory to inject the bean:
+
+@Document(collection = "#{@configRepositoryCustom.getCollectionName()}")
+public class Config {
+
+}
+ * @author paulvernonhayesii
+ *
+ */
 @Document(collection = "#{@mongoConfiguration.fullCollectionName('flow_workflows_activity')}")
 public class ActivityEntity {
 

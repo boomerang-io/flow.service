@@ -9,8 +9,8 @@ import java.util.TimeZone;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -23,11 +23,13 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import net.boomerangplatform.Application;
 import net.boomerangplatform.controller.TeamController;
 import net.boomerangplatform.misc.FlowTests;
 import net.boomerangplatform.model.CreateFlowTeam;
 import net.boomerangplatform.model.WorkflowQuotas;
+import net.boomerangplatform.mongo.entity.ActivityEntity;
 import net.boomerangplatform.mongo.entity.FlowTeamConfiguration;
 import net.boomerangplatform.mongo.entity.FlowTeamEntity;
 import net.boomerangplatform.mongo.model.Quotas;
@@ -37,21 +39,19 @@ import net.boomerangplatform.tests.MongoConfig;
 // try classpath attribute
 // try locations and *include the entity classes
 //@RunWith(MockitoJUnitRunner.class)
-@ContextConfiguration(classes = {Application.class, MongoConfig.class})//, MongoConfiguration.class})
+@ContextConfiguration(loader=AnnotationConfigContextLoader.class,
+classes = {Application.class, MongoConfig.class, ActivityEntity.class, ApplicationContextProvider.class})//, MongoConfiguration.class})
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles(profiles={"local"}, resolver = ActiveProfilesResolver1.class)//, inheritProfiles=false)
 @WithMockUser(roles = {"admin"})
 @WithUserDetails("mdroy@us.ibm.com")
 public class TeamControllerTests extends FlowTests implements BeanFactoryPostProcessor {
-//  
-//  @Mock
-//  MongoDatabase mockDb;
-//  
-  @Mock
+  
+  @Autowired
   private TeamController controller;
   
   @Override
-  @Before
+  @Before   
   public void setUp() throws IOException {
    super.setUp();
   }

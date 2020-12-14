@@ -5,6 +5,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
@@ -27,7 +28,7 @@ import de.flapdoodle.embed.process.config.store.HttpProxyFactory;
 import de.flapdoodle.embed.process.config.store.IDownloadConfig;
 import net.boomerangplatform.mongo.service.MongoConfiguration;
 
-@Configurable
+@Configuration
 public class MongoConfig implements InitializingBean, DisposableBean  {
 
   private static final String MONGO_IP = "localhost";
