@@ -18,10 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import net.boomerangplatform.client.ExternalTeamService;
 import net.boomerangplatform.client.ExernalUserService;
+import net.boomerangplatform.client.ExternalTeamService;
 import net.boomerangplatform.client.model.Team;
-import net.boomerangplatform.client.model.UserProfile;
 import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.TeamQueryResult;
@@ -69,10 +68,10 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private FlowWorkflowService flowWorkflowService;
-  
+
   @Value("${max.concurrent.workflows}")
   private Integer maxConcurrentWorkflows;
-  
+
   @Value("${max.workflow.count}")
   private Integer maxWorkflowCount;
 
@@ -90,7 +89,7 @@ public class TeamServiceImpl implements TeamService {
 
   @Autowired
   private WorkflowService workflowService;
-  
+
   @Autowired
   private WorkflowVersionService workflowVersionService;
 
@@ -120,7 +119,7 @@ public class TeamServiceImpl implements TeamService {
     final FlowTeamEntity flowTeamEntity = new FlowTeamEntity();
     flowTeamEntity.setName(teamName);
     flowTeamEntity.setHigherLevelGroupId(higherLevelGroupId);
-    
+
     flowTeamEntity.setIsActive(true);
     if (flowTeamEntity.getQuotas() == null) {
       Quotas quotas = new Quotas();
@@ -236,7 +235,8 @@ public class TeamServiceImpl implements TeamService {
   public List<FlowTeamConfiguration> getAllTeamProperties(String teamId) {
     FlowTeamEntity flowTeamEntity = flowTeamService.findById(teamId);
 
-    if (flowTeamEntity.getSettings() != null && flowTeamEntity.getSettings().getProperties() != null) {
+    if (flowTeamEntity.getSettings() != null
+        && flowTeamEntity.getSettings().getProperties() != null) {
       return flowTeamEntity.getSettings().getProperties();
     } else {
       return Collections.emptyList();
@@ -245,11 +245,9 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<TeamWorkflowSummary> getAllTeams() {
-  
-    List<FlowTeamEntity> flowTeams = getAllTeamsListing();
-    
+
     final List<TeamWorkflowSummary> teamWorkFlowSummary =
-        populateWorkflowSummaryInformation(flowTeams);
+        populateWorkflowSummaryInformation(getAllTeamsListing());
     return teamWorkFlowSummary;
   }
 
@@ -257,11 +255,9 @@ public class TeamServiceImpl implements TeamService {
     List<FlowTeamEntity> flowTeams = null;
     if (!flowExternalUrlTeam.isBlank()) {
       flowTeams = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
-    }
-    else {
-      final Page<FlowTeamEntity> paginatedTeamList = flowTeamService.findAllTeams(Pageable.unpaged());
-      flowTeams =
-          paginatedTeamList.getContent();
+    } else {
+
+      flowTeams = flowTeamService.findAllTeams(Pageable.unpaged()).getContent();
     }
     return flowTeams;
   }
@@ -339,17 +335,17 @@ public class TeamServiceImpl implements TeamService {
 
   @Override
   public List<TeamWorkflowSummary> getTeamListing(FlowUserEntity userEntity) {
-    
+
     List<FlowTeamEntity> flowTeams = getUsersTeamListing(userEntity);
     List<TeamWorkflowSummary> flowTeamListing = new LinkedList<>();
-    
+
     if (flowTeams != null) {
       for (FlowTeamEntity team : flowTeams) {
         TeamWorkflowSummary summary = new TeamWorkflowSummary(team, null);
         flowTeamListing.add(summary);
       }
     }
-    
+
     return flowTeamListing;
   }
 
@@ -358,12 +354,8 @@ public class TeamServiceImpl implements TeamService {
     FlowTeamEntity team = flowTeamService.findById(teamId);
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
-    List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
-    Quotas quotas = setTeamQuotas(team);
-
-    team.setQuotas(quotas);
+    team.setQuotas(setTeamQuotas(team));
     FlowTeamEntity updatedTeam = this.flowTeamService.save(team);
 
     WorkflowQuotas workflowQuotas = new WorkflowQuotas();
@@ -376,8 +368,9 @@ public class TeamServiceImpl implements TeamService {
     workflowQuotas.setMaxConcurrentWorkflows(updatedTeam.getQuotas().getMaxConcurrentWorkflows());
 
     workflowQuotas.setCurrentWorkflowCount(workflows.size());
-    workflowQuotas.setCurrentConcurrentWorkflows(concurrentActivities.size());
-    workflowQuotas.setCurrentWorkflowExecutionMonthly(activitiesMonthly.size());
+    workflowQuotas.setCurrentConcurrentWorkflows(getConcurrentWorkflowActivities(teamId).size());
+    workflowQuotas
+        .setCurrentWorkflowExecutionMonthly(getMonthlyWorkflowActivities(page, teamId).size());
     setWorkflowStorage(workflows, workflowQuotas);
     setWorkflowResetDate(workflowQuotas);
     return workflowQuotas;
@@ -388,20 +381,16 @@ public class TeamServiceImpl implements TeamService {
     if (flowExternalUrlUser.isBlank()) {
       highLevelGroupIds = userEntity.getFlowTeams();
     } else {
-      UserProfile profile = boomerangUserService.getInternalUserProfile();
-      List<Team> teams = profile.getTeams();
+      List<Team> teams = boomerangUserService.getInternalUserProfile().getTeams();
       if (teams != null) {
         highLevelGroupIds = teams.stream().map(Team::getId).collect(Collectors.toList());
       }
     }
-    
     List<FlowTeamEntity> flowTeam = null;
     if (!flowExternalUrlTeam.isBlank()) {
       flowTeam = this.externalTeamService.getExternalTeams(flowExternalUrlTeam);
-    }
-    else {
-      flowTeam =
-          flowTeamService.findTeamsWithHighLevelGroups(highLevelGroupIds);
+    } else {
+      flowTeam = flowTeamService.findTeamsWithHighLevelGroups(highLevelGroupIds);
     }
     return flowTeam;
   }
@@ -409,11 +398,21 @@ public class TeamServiceImpl implements TeamService {
   @Override
   public List<TeamWorkflowSummary> getUserTeams(FlowUserEntity userEntity) {
 
-    List<FlowTeamEntity> flowTeam = getUsersTeamListing(userEntity);
-    
     final List<TeamWorkflowSummary> teamWorkFlowSummary =
-        populateWorkflowSummaryInformation(flowTeam);
+        populateWorkflowSummaryInformation(getUsersTeamListing(userEntity));
     return teamWorkFlowSummary;
+  }
+
+  @Override
+  public void updateFlagsAndQuotas() {
+    for (final FlowTeamEntity entity : getAllTeamsListing()) {
+      final List<WorkflowSummary> workflowSummary =
+          workflowService.getWorkflowsForTeam(entity.getId());
+      final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
+      updateSummaryWithUpgradeFlags(teamWorkFlow);
+      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
+    }
+
   }
 
   private List<TeamWorkflowSummary> populateWorkflowSummaryInformation(
@@ -423,8 +422,6 @@ public class TeamServiceImpl implements TeamService {
       final List<WorkflowSummary> workflowSummary =
           workflowService.getWorkflowsForTeam(entity.getId());
       final TeamWorkflowSummary teamWorkFlow = new TeamWorkflowSummary(entity, workflowSummary);
-      updateSummaryWithUpgradeFlags(teamWorkFlow);
-      updateSummaryWithQuotas(entity, workflowSummary, teamWorkFlow);
       teamWorkFlowSummary.add(teamWorkFlow);
     }
     return teamWorkFlowSummary;
@@ -436,7 +433,7 @@ public class TeamServiceImpl implements TeamService {
     List<WorkflowSummary> workflows = workflowService.getWorkflowsForTeam(team.getId());
     Pageable page = Pageable.unpaged();
     List<ActivityEntity> concurrentActivities = getConcurrentWorkflowActivities(teamId);
-    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page,teamId);
+    List<ActivityEntity> activitiesMonthly = getMonthlyWorkflowActivities(page, teamId);
 
     Quotas teamQuotas = team.getQuotas();
     teamQuotas.setMaxWorkflowCount(maxWorkflowCount);
@@ -554,9 +551,8 @@ public class TeamServiceImpl implements TeamService {
   private void updateSummaryWithUpgradeFlags(TeamWorkflowSummary teamSummary) {
     if (teamSummary.getWorkflows() != null) {
       for (WorkflowSummary summary : teamSummary.getWorkflows()) {
-        String workflowId = summary.getId();
         FlowWorkflowRevision latestRevision =
-            workflowVersionService.getLatestWorkflowVersion(workflowId);
+            workflowVersionService.getLatestWorkflowVersion(summary.getId());
         if (latestRevision != null) {
           summary.setTemplateUpgradesAvailable(latestRevision.isTemplateUpgradesAvailable());
         }

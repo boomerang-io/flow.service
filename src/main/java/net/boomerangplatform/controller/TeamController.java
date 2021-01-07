@@ -44,7 +44,8 @@ public class TeamController {
 
   @PostMapping(value = "/teams")
   public void createCiTeam(@RequestBody CreateFlowTeam createCiTeamRequest) {
-    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId(), createCiTeamRequest.getName());
+    flowTeamService.createFlowTeam(createCiTeamRequest.getCreatedGroupId(),
+        createCiTeamRequest.getName());
   }
 
   @GetMapping(value = "/teams")
@@ -142,6 +143,12 @@ public class TeamController {
   @DeleteMapping(value = "/teams/{teamId}")
   public FlowTeamEntity deactivateTeam(@PathVariable String teamId) {
     return flowTeamService.deactivateTeam(teamId);
+  }
+
+  @PatchMapping(value = "/teams/update")
+  public void updateTeamFlagsandQuotas() {
+flowTeamService.updateFlagsAndQuotas();
+
   }
 
 }

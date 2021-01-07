@@ -56,6 +56,8 @@ public interface TeamService {
   Quotas getDefaultQuotas();
 
   FlowTeamEntity deactivateTeam(String teamId);
+
+  void updateFlagsAndQuotas();
   
 
 }
