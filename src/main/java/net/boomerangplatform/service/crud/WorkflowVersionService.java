@@ -3,6 +3,7 @@ package net.boomerangplatform.service.crud;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.RevisionResponse;
 
@@ -18,7 +19,7 @@ public interface WorkflowVersionService {
 
   FlowWorkflowRevision getWorkflowVersionWithId(String id);
 
-  FlowWorkflowRevision insertWorkflowVersion(FlowWorkflowRevision flowWorkflowEntity);
+  ResponseEntity<FlowWorkflowRevision> insertWorkflowVersion(FlowWorkflowRevision flowWorkflowEntity);
 
   List<RevisionResponse> viewChangelog(Optional<String> workFlowId, Pageable pageable);
 

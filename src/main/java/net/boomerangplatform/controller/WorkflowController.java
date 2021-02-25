@@ -78,7 +78,7 @@ public class WorkflowController {
   }
 
   @PostMapping(value = "/{workFlowId}/revision")
-  public FlowWorkflowRevision insertWorkflow(@PathVariable String workFlowId,
+  public ResponseEntity<FlowWorkflowRevision> insertWorkflow(@PathVariable String workFlowId,
       @RequestBody FlowWorkflowRevision workflowSummaryEntity) {
     workflowSummaryEntity.setId(null);
     workflowSummaryEntity.setWorkFlowId(workFlowId);

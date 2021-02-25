@@ -112,7 +112,7 @@ public class WorkflowControllerTests extends FlowTests {
     FlowWorkflowRevision revision = objectMapper.readValue(json, FlowWorkflowRevision.class);
 
     FlowWorkflowRevision revisionEntity =
-        controller.insertWorkflow("5d1a188af6ca2c00014c4314", revision);
+        controller.insertWorkflow("5d1a188af6ca2c00014c4314", revision).getBody();
     assertEquals(2L, revisionEntity.getVersion());
   }
 

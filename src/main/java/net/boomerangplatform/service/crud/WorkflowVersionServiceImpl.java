@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import net.boomerangplatform.model.FlowWorkflowRevision;
 import net.boomerangplatform.model.RevisionResponse;
@@ -20,8 +22,11 @@ import net.boomerangplatform.mongo.entity.RevisionEntity;
 import net.boomerangplatform.mongo.model.ChangeLog;
 import net.boomerangplatform.mongo.model.Dag;
 import net.boomerangplatform.mongo.model.Revision;
+import net.boomerangplatform.mongo.model.UserType;
+import net.boomerangplatform.mongo.model.WorkflowScope;
 import net.boomerangplatform.mongo.model.next.DAGTask;
 import net.boomerangplatform.mongo.service.FlowTaskTemplateService;
+import net.boomerangplatform.mongo.service.FlowWorkflowService;
 import net.boomerangplatform.mongo.service.RevisionService;
 import net.boomerangplatform.service.UserIdentityService;
 
@@ -36,6 +41,9 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
 
   @Autowired
   private FlowTaskTemplateService templateService;
+
+  @Autowired
+  private FlowWorkflowService workFlowRepository;
 
   @Override
   public void deleteWorkflowVersionWithId(String id) {
@@ -148,13 +156,20 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
   }
 
   @Override
-  public FlowWorkflowRevision insertWorkflowVersion(FlowWorkflowRevision flowWorkflowEntity) {
+  public ResponseEntity<FlowWorkflowRevision> insertWorkflowVersion(
+      FlowWorkflowRevision flowWorkflowEntity) {
+    final FlowUserEntity user = userIdentityService.getCurrentUser();
+
+
+    if (workFlowRepository.getWorkflow(flowWorkflowEntity.getWorkFlowId())
+        .getScope() == WorkflowScope.system && (user.getType() != UserType.admin || user.getType() != UserType.operator)) {
+      return new ResponseEntity<>(new FlowWorkflowRevision(), HttpStatus.FORBIDDEN);
+    }
 
     final String workFlowId = flowWorkflowEntity.getWorkFlowId();
     final long currentCount = flowWorkflowService.getWorkflowCount(workFlowId);
 
     final ChangeLog changelog = new ChangeLog();
-    FlowUserEntity user = userIdentityService.getCurrentUser();
 
     changelog.setUserId(user.getId());
 
@@ -175,7 +190,9 @@ public class WorkflowVersionServiceImpl implements WorkflowVersionService {
         flowWorkflowService.insertWorkflow(flowWorkflowEntity.convertToEntity()));
 
     updateUpgradeFlags(newRevision);
-    return newRevision;
+
+    return new ResponseEntity<>(newRevision, HttpStatus.OK);
+
   }
 
   @Override
