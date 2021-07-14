@@ -57,7 +57,7 @@ public class ModelConverterV5 {
       dagTask.setTemplateVersion(config.getTaskVersion());
 
       /* Set up tas inputs */
-      
+
       Map<String, String> inputs = config.getInputs();
       List<CoreProperty> coreProperties = new LinkedList<>();
       for (Entry<String, String> entry : inputs.entrySet()) {
@@ -70,7 +70,7 @@ public class ModelConverterV5 {
       }
 
       dagTask.setProperties(coreProperties);
-      
+
       /* Set up task results. */
       List<TaskResult> results = config.getOutputs();
       dagTask.setResults(results);
@@ -146,6 +146,7 @@ public class ModelConverterV5 {
   public static RevisionEntity convertToEntityModel(WorkflowRevision revision) {
     RevisionEntity entity = new RevisionEntity();
     entity.setVersion(revision.getVersion());
+    entity.setMarkdown(revision.getMarkdown());
 
     if (revision.getDag() == null) {
       return entity;
@@ -208,6 +209,7 @@ public class ModelConverterV5 {
     revision.setChangelog(convertedRevision.getChangelog());
     revision.setVersion(convertedRevision.getVersion());
     revision.setWorkFlowId(convertedRevision.getWorkFlowId());
+    revision.setMarkdown(convertedRevision.getMarkdown());
 
     RestConfig restConfig = new RestConfig();
     revision.setConfig(restConfig);
@@ -397,9 +399,7 @@ public class ModelConverterV5 {
 
     if (CUSTOMTASKNAME.equals(type) || TEMPLATETASKNAME.equals(type) || "approval".equals(type)
         || "manual".equals(type) || "setwfproperty".equals(type) || "eventwait".equals(type)
-        || "releaselock".equals(type)
-        || "script".equals(type)
-        || "acquirelock".equals(type)
+        || "releaselock".equals(type) || "script".equals(type) || "acquirelock".equals(type)
         || "runworkflow".equals(type)) {
       port.setType("task");
     } else {
@@ -463,7 +463,7 @@ public class ModelConverterV5 {
 
     config.setOutputs(dagTask.getResults());
     if (inputs != null && !inputs.isEmpty()) {
-    
+
       Map<String, String> map = new HashMap<>();
       for (CoreProperty coreProperty : inputs) {
         map.put(coreProperty.getKey(), coreProperty.getValue());
@@ -506,7 +506,7 @@ public class ModelConverterV5 {
     if ("5c3907a1352b1b51412ed079".equals(dagTask.getTemplateId())) {
       return "script";
     }
-    
+
     if (dagType == TaskType.end || dagType == TaskType.start) {
       type = "startend";
     } else if (dagType == TaskType.template) {
@@ -515,26 +515,21 @@ public class ModelConverterV5 {
       type = CUSTOMTASKNAME;
     } else if (dagType == TaskType.decision) {
       type = DECISIONKEY;
-    }
-    else if (dagType == TaskType.setwfproperty) {
+    } else if (dagType == TaskType.setwfproperty) {
       type = "setwfproperty";
-    }
-    else if (dagType == TaskType.manual) {
+    } else if (dagType == TaskType.manual) {
       type = "manual";
     } else if (dagType == TaskType.approval) {
       type = "approval";
-    }
-    else if (dagType == TaskType.eventwait) {
+    } else if (dagType == TaskType.eventwait) {
       type = "eventwait";
     } else if (dagType == TaskType.acquirelock) {
       type = "acquirelock";
     } else if (dagType == TaskType.releaselock) {
       type = "releaselock";
-    }
-    else if (dagType == TaskType.runworkflow) {
+    } else if (dagType == TaskType.runworkflow) {
       type = "runworkflow";
-    }
-    else if (dagType == TaskType.script) {
+    } else if (dagType == TaskType.script) {
       type = "script";
     }
     return type;

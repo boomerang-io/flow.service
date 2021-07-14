@@ -27,4 +27,8 @@ public interface UserIdentityService {
 
   public ResponseEntity<Boolean> activateSetup(OneTimeCode otc);
 
+  public void deleteFlowUser(String userId);
+
+  public FlowUserEntity addFlowUser(FlowUser flowUser);
+
 }

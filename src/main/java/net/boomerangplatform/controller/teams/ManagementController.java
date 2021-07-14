@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,7 @@ import net.boomerangplatform.model.FlowTeam;
 import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.UserQueryResult;
 import net.boomerangplatform.model.profile.SortSummary;
+import net.boomerangplatform.mongo.entity.FlowUserEntity;
 import net.boomerangplatform.service.UserIdentityService;
 import net.boomerangplatform.service.crud.TeamService;
 
@@ -47,6 +49,21 @@ public class ManagementController {
     if (isUserManagementAvaliable()) {
       userIdentityService.updateFlowUser(userId, flowUser);
     }
+  }
+
+  @DeleteMapping(value = "/users/{userId}")
+  public void deleteFlowUser(@PathVariable String userId) {
+    if (isUserManagementAvaliable()) {
+      userIdentityService.deleteFlowUser(userId);
+    }
+  }
+
+  @PostMapping(value = "/users")
+  public FlowUserEntity addUser(@RequestBody FlowUser flowUser) {
+    if (isUserManagementAvaliable()) {
+      return userIdentityService.addFlowUser(flowUser);
+    }
+    return new FlowUserEntity();
   }
 
 
@@ -93,7 +110,20 @@ public class ManagementController {
     return new FlowTeam();
   }
 
+  @DeleteMapping(value = "/teams/{teamId}")
+  public void addTeam(@PathVariable String teamId) {
+    if (isTeamManagementAvaliable()) {
+      teamService.deactivateTeam(teamId);
+    }
+  }
 
+  @GetMapping(value = "/teams/{teamId}")
+  public FlowTeam getTeam(@PathVariable String teamId) {
+    if (isTeamManagementAvaliable()) {
+      return teamService.getTeamById(teamId);
+    }
+    return new FlowTeam();
+  }
 
   @PatchMapping(value = "/teams/{teamId}/members")
   public void updateTeamMembers(@PathVariable String teamId,

@@ -110,10 +110,12 @@ public class WorkflowControllerTests extends FlowTests {
     String json = new String(Files.readAllBytes(resource.toPath()));
     ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     FlowWorkflowRevision revision = objectMapper.readValue(json, FlowWorkflowRevision.class);
+    revision.setMarkdown("test");
 
     FlowWorkflowRevision revisionEntity =
         controller.insertWorkflow("5d1a188af6ca2c00014c4314", revision);
     assertEquals(2L, revisionEntity.getVersion());
+    assertEquals("test", revisionEntity.getMarkdown());
   }
 
   @Test
@@ -314,8 +316,8 @@ public class WorkflowControllerTests extends FlowTests {
     assertEquals(14, parameters.size());
     assertEquals("workflow.params.hello", parameters.get(0));
     assertEquals("params.hello", parameters.get(1));
-    assertEquals("system.params.workflow-id", parameters.get(2)); 
-    assertEquals("params.workflow-id", parameters.get(3)); 
+    assertEquals("system.params.workflow-id", parameters.get(2));
+    assertEquals("params.workflow-id", parameters.get(3));
 
   }
 

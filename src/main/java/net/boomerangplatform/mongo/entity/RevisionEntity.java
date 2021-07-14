@@ -24,6 +24,8 @@ public class RevisionEntity {
 
   private ChangeLog changelog;
 
+  private String markdown;
+
   public Dag getDag() {
     return dag;
   }
@@ -63,5 +65,15 @@ public class RevisionEntity {
   public void setChangelog(ChangeLog changelog) {
     this.changelog = changelog;
   }
+
+  public String getMarkdown() {
+    return markdown;
+  }
+
+  public void setMarkdown(String markdown) {
+    this.markdown = markdown;
+  }
+  
+  
 
 }

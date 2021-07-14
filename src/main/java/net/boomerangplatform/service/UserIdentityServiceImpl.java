@@ -18,6 +18,7 @@ import net.boomerangplatform.model.FlowUser;
 import net.boomerangplatform.model.OneTimeCode;
 import net.boomerangplatform.model.UserQueryResult;
 import net.boomerangplatform.mongo.entity.FlowUserEntity;
+import net.boomerangplatform.mongo.model.UserStatus;
 import net.boomerangplatform.mongo.model.UserType;
 import net.boomerangplatform.mongo.service.FlowUserService;
 import net.boomerangplatform.security.model.UserDetails;
@@ -51,11 +52,11 @@ public class UserIdentityServiceImpl implements UserIdentityService {
     } else {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       FlowUserEntity flowUser = new FlowUserEntity();
-      
+
       if (userProfile == null) {
         return null;
       }
-      
+
       BeanUtils.copyProperties(userProfile, flowUser);
 
       return flowUser;
@@ -159,7 +160,7 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       }
 
       FlowUserEntity userEntity = getOrRegisterUser(UserType.user);
-      
+
       UserProfile profile = new UserProfile();
       BeanUtils.copyProperties(userEntity, profile);
       return profile;
@@ -167,6 +168,23 @@ public class UserIdentityServiceImpl implements UserIdentityService {
       UserProfile userProfile = coreUserService.getInternalUserProfile();
       return userProfile;
     }
+  }
+
+
+  @Override
+  public void deleteFlowUser(String userId) {
+    if (flowUserService.getUserById(userId).isPresent()) {
+      FlowUserEntity user = flowUserService.getUserById(userId).get();
+      user.setStatus(UserStatus.deleted);
+      flowUserService.save(user);
+    }
+  }
+
+
+  @Override
+  public FlowUserEntity addFlowUser(FlowUser flowUser) {
+    flowUser.setStatus(UserStatus.active);
+    return flowUserService.save(flowUser);
   }
 
 }
